@@ -21,6 +21,11 @@ export function formatDate(takenAtMs) {
   return dateFormat.format(takenAtMs);
 }
 
+// 앨범 파일에는 오래된 것부터 들어 있다. 화면에는 최신이 위로 오도록 뒤집어 보여 준다(원래 목록은 바꾸지 않는다).
+export function newestFirst(items) {
+  return [...items].reverse();
+}
+
 // 날짜를 모르는 사진(noDate)은 날짜를 보여 주지 않는다.
 export function dateLabel(item) {
   return item.noDate ? '' : formatDate(item.takenAt);
@@ -113,8 +118,8 @@ export function main() {
   }
 
   function showShelf() {
-    const photos = album.items.filter((i) => i.kind === 'photo');
-    const videos = album.items.filter((i) => i.kind === 'video');
+    const photos = newestFirst(album.items.filter((i) => i.kind === 'photo'));
+    const videos = newestFirst(album.items.filter((i) => i.kind === 'video'));
     const tabs = [
       ['photos', '사진', photos.length],
       ['videos', '영상', videos.length],
