@@ -1,2 +1,16 @@
-﻿node_modules/
-
+﻿# 기본은 전부 올리지 않기. 아래 목록에 있는 파일만 올린다. (실수로 끌어다 놓은 사진·영상 방지)
+*
+!.gitignore
+!index.html
+!favicon.svg
+!og.png
+!package.json
+!site.config.json
+!css/
+!css/style.css
+!js/
+!js/*.js
+!data/
+!data/meta.json
+!data/index.bin
+!data/*.bin
