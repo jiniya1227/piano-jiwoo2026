@@ -33,6 +33,18 @@ export function newestFirst(items) {
 }
 
 // 날짜를 모르는 사진(noDate)은 날짜를 보여 주지 않는다.
+// 주소 뒤쪽(#k=열쇠)에서 열쇠를 꺼낸다. 없거나 모양이 이상하면 null.
+export function keyFromHash(hash) {
+  const m = /^#k=([^&]+)$/.exec(hash ?? '');
+  if (!m) return null;
+  try {
+    const key = decodeURIComponent(m[1]);
+    return /^[A-Za-z0-9_\-+/=]{20,100}$/.test(key) ? key : null;
+  } catch {
+    return null;
+  }
+}
+
 export function dateLabel(item) {
   return item.noDate ? '' : formatDate(item.takenAt);
 }
@@ -328,6 +340,12 @@ export function main() {
 
   // ---------- 시작 ----------
   (async () => {
+    // 가족에게 보내는 "바로 열기" 링크: 주소 뒤 #k=열쇠 가 있으면 비밀번호 없이 열고, 이 폰에 기억해 두고, 주소에서는 지운다.
+    const linkKey = keyFromHash(location.hash);
+    if (linkKey) {
+      store.rememberKey(linkKey);
+      try { history.replaceState(null, '', location.pathname + location.search); } catch { /* 지우지 못해도 앨범은 열린다 */ }
+    }
     const saved = store.getRememberedKey();
     if (!saved) { showLock(); return; }
     show(el('main', { class: 'lock' }, el('span', { class: 'eyebrow' }, COVER.eyebrow), el('h1', {}, COVER.title), el('p', { class: 'sub' }, '앨범을 여는 중…'), ornament(), keys(false)));
