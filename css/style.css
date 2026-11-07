@@ -102,7 +102,7 @@ svg { display: block; flex: none; }
   border: 2px solid var(--pink-200); border-radius: 22px 22px 22px 6px; box-shadow: 0 4px 0 var(--pink-100);
 }
 .quote:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--pink-100); }
-.quote-text { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-top: 4px; overflow-wrap: anywhere; }
+.quote-text { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-top: 4px; }
 .chip {
   display: inline-block; padding: 1px 12px; background: var(--pink-100); color: var(--pink-700);
   font-family: var(--font-display); font-size: 18px; line-height: 1.6; border-radius: 999px;
@@ -129,9 +129,10 @@ svg { display: block; flex: none; }
   padding: 14px 18px 16px; box-shadow: 0 4px 0 var(--pink-100);
 }
 .msg .chip { margin-bottom: 8px; }
-.msg-text { overflow-wrap: anywhere; }
+/* 한글은 단어 중간이 아니라 띄어쓰기에서만 줄이 바뀌게 한다. 마지막 줄에 한 글자만 남는 것도 피한다. */
+.msg-text, .quote-text { word-break: keep-all; overflow-wrap: break-word; text-wrap: pretty; }
 .line { display: block; }
-.line + .line { margin-top: 6px; }
+.line + .line { margin-top: 1px; }
 .empty { text-align: center; color: var(--plum-soft); padding: 48px 20px; }
 
 /* ---------- 아래 메뉴 ---------- */
