@@ -1,8 +1,14 @@
-// 화면: 잠금 → 책장(사진·영상·메시지) → 한 장 보기. 글자는 항상 텍스트로만 넣는다(innerHTML 사용 금지).
+// 화면: 잠금 → 책장(사진·영상·메시지) → 한 장 보기. 가족이 쓴 글은 항상 텍스트로만 넣는다(innerHTML 사용 금지).
 import { openWithPassword, openWithKey, WrongPasswordError, httpFetchBytes } from './album.js';
 import { createStore } from './store.js';
 
-const TITLE = '지우의 첫 콩쿠르';
+// 표지 글: 가족이 정한 문구 그대로
+export const COVER = {
+  badge: '준대상',
+  title: '지우의 첫 피아노 콩쿠르',
+  date: '2026년 11월 08일',
+  cheer: '축하해 지우야!',
+};
 
 export function nextIndex(current, delta, total) {
   if (total <= 0) return 0;
@@ -31,6 +37,11 @@ export function dateLabel(item) {
   return item.noDate ? '' : formatDate(item.takenAt);
 }
 
+// 메시지를 줄 단위로 나눈다(빈 줄 제거). 줄마다 따로 보여 주면 읽기 편하다.
+export function messageLines(text) {
+  return text.split('\n').map((line) => line.trim()).filter(Boolean);
+}
+
 export function el(tag, props = {}, ...children) {
   const node = document.createElement(tag);
   for (const [key, value] of Object.entries(props)) {
@@ -47,6 +58,42 @@ export function el(tag, props = {}, ...children) {
   return node;
 }
 
+// ---------- 아이콘 (코드에 고정된 그림만 쓴다. 가족이 쓴 글은 여기로 들어오지 않는다) ----------
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const ICONS = {
+  photo: '<rect x="3.5" y="4.5" width="17" height="15" rx="3.5"/><circle cx="9" cy="10" r="1.7"/><path d="M4 17l5-4.5 4 3.5 3-2.5 4 3.5"/>',
+  video: '<rect x="3.5" y="5" width="17" height="14" rx="3.5"/><path d="M10.5 9.4v5.2l4.3-2.6z"/>',
+  chat: '<path d="M6 4.5h12a2.5 2.5 0 0 1 2.5 2.5v7a2.5 2.5 0 0 1-2.5 2.5h-6.2L8 20v-3.5H6A2.5 2.5 0 0 1 3.5 14V7A2.5 2.5 0 0 1 6 4.5z"/>',
+  heart: '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',
+  close: '<path d="M6 6l12 12M18 6L6 18"/>',
+  left: '<path d="M15 5l-7 7 7 7"/>',
+  right: '<path d="M9 5l7 7-7 7"/>',
+  play: '<path d="M8 5.5v13l11-6.5z"/>',
+  award: '<circle cx="12" cy="8.5" r="6"/><path d="M8.7 13.6L7.5 21.5l4.5-2.6 4.5 2.6-1.2-7.9"/>',
+  sparkle: '<path d="M12 2Q12.8 11.2 22 12Q12.8 12.8 12 22Q11.2 12.8 2 12Q11.2 11.2 12 2z"/>',
+};
+
+function icon(name, size = 22, { fill = false } = {}) {
+  const paint = fill ? 'fill="currentColor" stroke="none"' : 'fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"';
+  const markup = `<svg xmlns="${SVG_NS}" viewBox="0 0 24 24" width="${size}" height="${size}" ${paint} aria-hidden="true" focusable="false">${ICONS[name]}</svg>`;
+  return document.importNode(new DOMParser().parseFromString(markup, 'image/svg+xml').documentElement, true);
+}
+
+// 피아노 건반 장식. play 가 true 이면 처음 한 번 핑크로 차례차례 눌린다.
+function keys(play) {
+  const bar = el('div', { class: play ? 'keys intro' : 'keys', 'aria-hidden': 'true' });
+  for (let i = 0; i < 14; i++) {
+    bar.append(el('span', { class: 'key' }, [0, 1, 3, 4, 5].includes(i % 7) ? el('i', { class: 'bk' }) : null));
+  }
+  return bar;
+}
+
+// 제목을 두 줄로 나눈다: "지우의 첫" / "피아노 콩쿠르"
+function titleLines() {
+  const words = COVER.title.split(' ');
+  return [el('span', {}, words.slice(0, 2).join(' ')), el('span', {}, words.slice(2).join(' '))];
+}
+
 function safeStorage() {
   try {
     return window.localStorage;
@@ -61,6 +108,7 @@ export function main() {
   const fetchBytes = httpFetchBytes('data/');
   let album = null;
   let tab = 'photos';
+  let introPlayed = false;
 
   const show = (...nodes) => { app.replaceChildren(...nodes); window.scrollTo(0, 0); };
 
@@ -90,10 +138,11 @@ export function main() {
       }
     });
     show(el('main', { class: 'lock' },
-      el('p', { class: 'eyebrow' }, 'Congratulations'),
-      el('h1', {}, TITLE),
+      el('div', { class: 'lock-badge' }, icon('heart', 34, { fill: true })),
+      el('h1', {}, titleLines()),
       el('p', { class: 'sub' }, '가족만 볼 수 있는 앨범이에요'),
-      form));
+      form,
+      keys(false)));
     input.focus();
   }
 
@@ -117,30 +166,43 @@ export function main() {
     return img;
   }
 
+  const goMessages = () => { tab = 'messages'; showShelf(); };
+
+  function senderChip(from) {
+    return el('span', { class: 'chip' }, from);
+  }
+
   function showShelf() {
     const photos = newestFirst(album.items.filter((i) => i.kind === 'photo'));
     const videos = newestFirst(album.items.filter((i) => i.kind === 'video'));
     const tabs = [
-      ['photos', '사진', photos.length],
-      ['videos', '영상', videos.length],
-      ['messages', '메시지', album.messages.length],
+      ['photos', '사진', 'photo', photos.length],
+      ['videos', '영상', 'video', videos.length],
+      ['messages', '메시지', 'chat', album.messages.length],
     ];
 
     const tabBar = el('nav', { class: 'tabs', 'aria-label': '앨범 메뉴' },
-      tabs.map(([id, label, count]) => el('button', {
+      tabs.map(([id, label, iconName, count]) => el('button', {
         type: 'button', class: id === tab ? 'tab on' : 'tab', 'aria-current': id === tab ? 'page' : null,
         onclick: () => { tab = id; showShelf(); },
-      }, label, el('span', { class: 'count' }, count))));
+      }, icon(iconName, 20), el('span', { class: 'tab-label' }, label), el('span', { class: 'count' }, count))));
 
     let body;
     if (tab === 'photos') {
+      const play = !introPlayed;
+      introPlayed = true;
       body = [
         el('header', { class: 'cover' },
-          el('span', { class: 'badge' }, '준대상'),
-          el('h1', {}, TITLE),
-          el('p', { class: 'sub' }, '축하해, 지우야'),
-          album.messages.slice(0, 2).map((m) => el('button', { type: 'button', class: 'quote', onclick: () => { tab = 'messages'; showShelf(); } },
-            el('span', { class: 'quote-text' }, m.text), el('span', { class: 'quote-from' }, `— ${m.from}`)))),
+          keys(play),
+          el('span', { class: 'sparkle s1', 'aria-hidden': 'true' }, icon('sparkle', 26, { fill: true })),
+          el('span', { class: 'sparkle s2', 'aria-hidden': 'true' }, icon('sparkle', 18, { fill: true })),
+          el('span', { class: 'sparkle s3', 'aria-hidden': 'true' }, icon('sparkle', 22, { fill: true })),
+          el('span', { class: 'medal' }, icon('award', 22), COVER.badge),
+          el('h1', {}, titleLines()),
+          el('p', { class: 'date' }, COVER.date),
+          el('p', { class: 'cheer' }, COVER.cheer, icon('heart', 24, { fill: true })),
+          album.messages.slice(0, 2).map((m) => el('button', { type: 'button', class: 'quote', onclick: goMessages },
+            senderChip(m.from), el('span', { class: 'quote-text' }, messageLines(m.text).join(' '))))),
         photos.length
           ? el('div', { class: 'grid' }, photos.map((item, index) => el('button', {
             type: 'button', class: 'tile', 'aria-label': `사진 ${index + 1}번 크게 보기`, onclick: () => openViewer(photos, index),
@@ -153,7 +215,7 @@ export function main() {
         videos.length
           ? el('div', { class: 'videos' }, videos.map((item, index) => el('button', {
             type: 'button', class: 'video-card', 'aria-label': `영상 ${index + 1} 재생`, onclick: () => openVideo(item),
-          }, lazyThumb(item.thumb, `영상 ${index + 1}`), el('span', { class: 'play', 'aria-hidden': 'true' }, '▶'))))
+          }, lazyThumb(item.thumb, `영상 ${index + 1}`), el('span', { class: 'play', 'aria-hidden': 'true' }, icon('play', 28, { fill: true })))))
           : el('p', { class: 'empty' }, '아직 영상이 없어요'),
       ];
     } else {
@@ -161,7 +223,8 @@ export function main() {
         el('h2', { class: 'section' }, '가족 축하 메시지'),
         album.messages.length
           ? el('div', { class: 'messages' }, album.messages.map((m) => el('article', { class: 'msg' },
-            el('p', { class: 'msg-text' }, m.text), el('p', { class: 'msg-from' }, `— ${m.from}`))))
+            senderChip(m.from),
+            el('div', { class: 'msg-text' }, messageLines(m.text).map((line) => el('span', { class: 'line' }, line))))))
           : el('p', { class: 'empty' }, '아직 메시지가 없어요'),
       ];
     }
@@ -173,7 +236,7 @@ export function main() {
     const status = el('p', { class: 'viewer-status' }, '영상 불러오는 중…');
     const stage = el('div', { class: 'viewer-stage' }, status);
     const overlay = el('div', { class: 'viewer', role: 'dialog', 'aria-label': '영상 보기' },
-      el('div', { class: 'viewer-top' }, el('button', { type: 'button', class: 'icon-btn', 'aria-label': '닫기', onclick: close }, '×')),
+      el('div', { class: 'viewer-top' }, el('button', { type: 'button', class: 'icon-btn', 'aria-label': '닫기', onclick: close }, icon('close', 24))),
       stage);
     function close() { overlay.remove(); }
     document.body.append(overlay);
@@ -195,13 +258,22 @@ export function main() {
     const status = el('p', { class: 'viewer-status' });
     const counter = el('span', { class: 'counter' });
     const date = el('span', { class: 'date' });
-    const heart = el('button', { type: 'button', class: 'heart', onclick: () => { store.toggleHeart(list[index].id); paintHeart(); } });
-    const prev = el('button', { type: 'button', class: 'nav prev', 'aria-label': '이전 사진', onclick: () => go(-1) }, '‹');
-    const next = el('button', { type: 'button', class: 'nav next', 'aria-label': '다음 사진', onclick: () => go(1) }, '›');
+    const heart = el('button', {
+      type: 'button', class: 'heart', 'aria-pressed': 'false',
+      onclick: () => {
+        store.toggleHeart(list[index].id);
+        paintHeart();
+        heart.classList.remove('pop');
+        void heart.offsetWidth; // 같은 움직임을 다시 보이게 한다
+        heart.classList.add('pop');
+      },
+    }, icon('heart', 22), el('span', {}, '좋아요'));
+    const prev = el('button', { type: 'button', class: 'nav prev', 'aria-label': '이전 사진', onclick: () => go(-1) }, icon('left', 26));
+    const next = el('button', { type: 'button', class: 'nav next', 'aria-label': '다음 사진', onclick: () => go(1) }, icon('right', 26));
     const stage = el('div', { class: 'viewer-stage' }, img, status, prev, next);
     const overlay = el('div', { class: 'viewer', role: 'dialog', 'aria-label': '사진 크게 보기' },
       el('div', { class: 'viewer-top' },
-        el('button', { type: 'button', class: 'icon-btn', 'aria-label': '닫기', onclick: close }, '×'), counter),
+        el('button', { type: 'button', class: 'icon-btn', 'aria-label': '닫기', onclick: close }, icon('close', 24)), counter),
       stage,
       el('div', { class: 'viewer-bottom' }, date, heart));
 
@@ -211,7 +283,6 @@ export function main() {
 
     function paintHeart() {
       const on = store.getHearts().includes(list[index].id);
-      heart.textContent = on ? '♥ 좋아요' : '♡ 좋아요';
       heart.setAttribute('aria-pressed', on ? 'true' : 'false');
       heart.classList.toggle('on', on);
     }
@@ -251,7 +322,7 @@ export function main() {
   (async () => {
     const saved = store.getRememberedKey();
     if (!saved) { showLock(); return; }
-    show(el('main', { class: 'lock' }, el('h1', {}, TITLE), el('p', { class: 'sub' }, '앨범을 여는 중…')));
+    show(el('main', { class: 'lock' }, el('h1', {}, titleLines()), el('p', { class: 'sub' }, '앨범을 여는 중…'), keys(false)));
     try {
       album = await openWithKey(saved, fetchBytes);
       showShelf();
@@ -260,7 +331,7 @@ export function main() {
         store.forgetKey();
         showLock();
       } else {
-        show(el('main', { class: 'lock' }, el('h1', {}, TITLE),
+        show(el('main', { class: 'lock' }, el('h1', {}, titleLines()),
           el('p', { class: 'error' }, '앨범을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.'),
           el('button', { type: 'button', class: 'btn', onclick: () => location.reload() }, '다시 해 보기')));
       }
