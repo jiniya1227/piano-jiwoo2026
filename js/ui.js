@@ -6,7 +6,6 @@ import { createStore } from './store.js';
 export const COVER = {
   badge: '준대상',
   title: '지우의 첫 피아노 콩쿠르',
-  date: '2026년 11월 08일',
   cheer: '축하해 지우야!',
 };
 
@@ -88,12 +87,6 @@ function keys(play) {
   return bar;
 }
 
-// 제목을 두 줄로 나눈다: "지우의 첫" / "피아노 콩쿠르"
-function titleLines() {
-  const words = COVER.title.split(' ');
-  return [el('span', {}, words.slice(0, 2).join(' ')), el('span', {}, words.slice(2).join(' '))];
-}
-
 function safeStorage() {
   try {
     return window.localStorage;
@@ -139,7 +132,7 @@ export function main() {
     });
     show(el('main', { class: 'lock' },
       el('div', { class: 'lock-badge' }, icon('heart', 34, { fill: true })),
-      el('h1', {}, titleLines()),
+      el('h1', {}, COVER.title),
       el('p', { class: 'sub' }, '가족만 볼 수 있는 앨범이에요'),
       form,
       keys(false)));
@@ -197,9 +190,8 @@ export function main() {
           el('span', { class: 'sparkle s1', 'aria-hidden': 'true' }, icon('sparkle', 26, { fill: true })),
           el('span', { class: 'sparkle s2', 'aria-hidden': 'true' }, icon('sparkle', 18, { fill: true })),
           el('span', { class: 'sparkle s3', 'aria-hidden': 'true' }, icon('sparkle', 22, { fill: true })),
+          el('h1', {}, COVER.title),
           el('span', { class: 'medal' }, icon('award', 22), COVER.badge),
-          el('h1', {}, titleLines()),
-          el('p', { class: 'date' }, COVER.date),
           el('p', { class: 'cheer' }, COVER.cheer, icon('heart', 24, { fill: true })),
           album.messages.slice(0, 2).map((m) => el('button', { type: 'button', class: 'quote', onclick: goMessages },
             senderChip(m.from), el('span', { class: 'quote-text' }, messageLines(m.text).join(' '))))),
@@ -322,7 +314,7 @@ export function main() {
   (async () => {
     const saved = store.getRememberedKey();
     if (!saved) { showLock(); return; }
-    show(el('main', { class: 'lock' }, el('h1', {}, titleLines()), el('p', { class: 'sub' }, '앨범을 여는 중…'), keys(false)));
+    show(el('main', { class: 'lock' }, el('h1', {}, COVER.title), el('p', { class: 'sub' }, '앨범을 여는 중…'), keys(false)));
     try {
       album = await openWithKey(saved, fetchBytes);
       showShelf();
@@ -331,7 +323,7 @@ export function main() {
         store.forgetKey();
         showLock();
       } else {
-        show(el('main', { class: 'lock' }, el('h1', {}, titleLines()),
+        show(el('main', { class: 'lock' }, el('h1', {}, COVER.title),
           el('p', { class: 'error' }, '앨범을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.'),
           el('button', { type: 'button', class: 'btn', onclick: () => location.reload() }, '다시 해 보기')));
       }
