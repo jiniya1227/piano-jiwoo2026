@@ -4,6 +4,7 @@ import { createStore } from './store.js';
 
 // 표지 글: 가족이 정한 문구 그대로
 export const COVER = {
+  eyebrow: "JIWOO'S PIANO DAY",
   badge: '준대상',
   title: '지우의 첫 피아노 콩쿠르',
   cheer: '축하해 지우야!',
@@ -68,8 +69,9 @@ const ICONS = {
   left: '<path d="M15 5l-7 7 7 7"/>',
   right: '<path d="M9 5l7 7-7 7"/>',
   play: '<path d="M8 5.5v13l11-6.5z"/>',
+  note: '<path d="M9 18.5V6l11-2.5v12"/><circle cx="6.5" cy="18.5" r="2.5" fill="currentColor"/><circle cx="17.5" cy="15.5" r="2.5" fill="currentColor"/>',
+  star: '<path d="M12 2.8l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.6l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z"/>',
   award: '<circle cx="12" cy="8.5" r="6"/><path d="M8.7 13.6L7.5 21.5l4.5-2.6 4.5 2.6-1.2-7.9"/>',
-  sparkle: '<path d="M12 2Q12.8 11.2 22 12Q12.8 12.8 12 22Q11.2 12.8 2 12Q11.2 11.2 12 2z"/>',
 };
 
 function icon(name, size = 22, { fill = false } = {}) {
@@ -85,6 +87,17 @@ function keys(play) {
     bar.append(el('span', { class: 'key' }, [0, 1, 3, 4, 5].includes(i % 7) ? el('i', { class: 'bk' }) : null));
   }
   return bar;
+}
+
+// 음표 낙서 세 개 (장식)
+function ornament() {
+  return el('div', { class: 'ornament', 'aria-hidden': 'true' },
+    el('span', { class: 'n1' }, icon('note', 26)), el('span', { class: 'n2' }, icon('note', 20)), el('span', { class: 'n3' }, icon('note', 24)));
+}
+
+// 섹션 제목: 한글 제목 옆에 개수 스티커
+function sectionHead(title, count, tag = 'h2') {
+  return el('div', { class: 'section' }, el(tag, {}, title), el('span', { class: 'bubble' }, count));
 }
 
 function safeStorage() {
@@ -131,7 +144,8 @@ export function main() {
       }
     });
     show(el('main', { class: 'lock' },
-      el('div', { class: 'lock-badge' }, icon('heart', 34, { fill: true })),
+      ornament(),
+      el('span', { class: 'eyebrow' }, COVER.eyebrow),
       el('h1', {}, COVER.title),
       el('p', { class: 'sub' }, '가족만 볼 수 있는 앨범이에요'),
       form,
@@ -161,8 +175,8 @@ export function main() {
 
   const goMessages = () => { tab = 'messages'; showShelf(); };
 
-  function senderChip(from) {
-    return el('span', { class: 'chip' }, from);
+  function sender(from) {
+    return el('span', { class: 'from' }, from);
   }
 
   function showShelf() {
@@ -174,11 +188,11 @@ export function main() {
       ['messages', '메시지', 'chat', album.messages.length],
     ];
 
-    const tabBar = el('nav', { class: 'tabs', 'aria-label': '앨범 메뉴' },
+    const tabBar = el('nav', { class: 'tabs', 'aria-label': '앨범 메뉴' }, el('div', { class: 'tabs-inner' },
       tabs.map(([id, label, iconName, count]) => el('button', {
         type: 'button', class: id === tab ? 'tab on' : 'tab', 'aria-current': id === tab ? 'page' : null,
         onclick: () => { tab = id; showShelf(); },
-      }, icon(iconName, 20), el('span', { class: 'tab-label' }, label), el('span', { class: 'count' }, count))));
+      }, icon(iconName, 22), el('span', { class: 'tab-label' }, label, el('span', { class: 'count' }, count))))));
 
     let body;
     if (tab === 'photos') {
@@ -187,14 +201,15 @@ export function main() {
       body = [
         el('header', { class: 'cover' },
           keys(play),
-          el('span', { class: 'sparkle s1', 'aria-hidden': 'true' }, icon('sparkle', 26, { fill: true })),
-          el('span', { class: 'sparkle s2', 'aria-hidden': 'true' }, icon('sparkle', 18, { fill: true })),
-          el('span', { class: 'sparkle s3', 'aria-hidden': 'true' }, icon('sparkle', 22, { fill: true })),
+          ornament(),
+          el('span', { class: 'eyebrow' }, COVER.eyebrow),
           el('h1', {}, COVER.title),
-          el('span', { class: 'medal' }, icon('award', 22), COVER.badge),
-          el('p', { class: 'cheer' }, COVER.cheer, icon('heart', 24, { fill: true })),
-          album.messages.slice(0, 2).map((m) => el('button', { type: 'button', class: 'quote', onclick: goMessages },
-            senderChip(m.from), el('span', { class: 'quote-text' }, messageLines(m.text).join(' '))))),
+          el('span', { class: 'medal' }, icon('star', 22, { fill: true }), COVER.badge),
+          el('p', { class: 'cheer' }, el('mark', {}, COVER.cheer)),
+          album.messages.length ? el('div', { class: 'quotes' },
+            album.messages.slice(0, 2).map((m, index) => el('button', { type: 'button', class: `quote q${index % 4}`, onclick: goMessages },
+              el('span', { class: 'quote-text' }, messageLines(m.text).join(' ')), sender(m.from)))) : null),
+        sectionHead('사진', photos.length),
         photos.length
           ? el('div', { class: 'grid' }, photos.map((item, index) => el('button', {
             type: 'button', class: 'tile', 'aria-label': `사진 ${index + 1}번 크게 보기`, onclick: () => openViewer(photos, index),
@@ -203,20 +218,22 @@ export function main() {
       ];
     } else if (tab === 'videos') {
       body = [
-        el('h2', { class: 'section' }, '영상'),
+        el('header', {}, sectionHead('영상', videos.length, 'h1')),
         videos.length
           ? el('div', { class: 'videos' }, videos.map((item, index) => el('button', {
             type: 'button', class: 'video-card', 'aria-label': `영상 ${index + 1} 재생`, onclick: () => openVideo(item),
-          }, lazyThumb(item.thumb, `영상 ${index + 1}`), el('span', { class: 'play', 'aria-hidden': 'true' }, icon('play', 28, { fill: true })))))
+          }, el('span', { class: 'video-frame' }, lazyThumb(item.thumb, `영상 ${index + 1}`), el('span', { class: 'play', 'aria-hidden': 'true' }, icon('play', 26, { fill: true }))),
+          el('span', { class: 'video-label' }, `영상 ${index + 1}`, el('span', { class: 'date' }, dateLabel(item))))))
           : el('p', { class: 'empty' }, '아직 영상이 없어요'),
       ];
     } else {
       body = [
-        el('h2', { class: 'section' }, '가족 축하 메시지'),
+        el('header', {}, sectionHead('가족 축하 메시지', album.messages.length, 'h1')),
         album.messages.length
-          ? el('div', { class: 'messages' }, album.messages.map((m) => el('article', { class: 'msg' },
-            senderChip(m.from),
-            el('div', { class: 'msg-text' }, messageLines(m.text).map((line) => el('span', { class: 'line' }, line))))))
+          ? el('div', { class: 'messages' }, album.messages.map((m, index) => el('article', { class: 'msg' },
+            el('span', { class: `tape t${index % 4}`, 'aria-hidden': 'true' }),
+            el('div', { class: 'msg-text' }, messageLines(m.text).map((line) => el('span', { class: 'line' }, line))),
+            sender(m.from))))
           : el('p', { class: 'empty' }, '아직 메시지가 없어요'),
       ];
     }
@@ -314,7 +331,7 @@ export function main() {
   (async () => {
     const saved = store.getRememberedKey();
     if (!saved) { showLock(); return; }
-    show(el('main', { class: 'lock' }, el('h1', {}, COVER.title), el('p', { class: 'sub' }, '앨범을 여는 중…'), keys(false)));
+    show(el('main', { class: 'lock' }, el('span', { class: 'eyebrow' }, COVER.eyebrow), el('h1', {}, COVER.title), el('p', { class: 'sub' }, '앨범을 여는 중…'), ornament(), keys(false)));
     try {
       album = await openWithKey(saved, fetchBytes);
       showShelf();
