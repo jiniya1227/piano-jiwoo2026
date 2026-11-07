@@ -1,0 +1,82 @@
+:root {
+  --bg: #fff7ee;
+  --ink: #3a2a22;
+  --muted: #8a7468;
+  --clay: #c4553b;
+  --clay-dark: #9e3f2a;
+  --soft: #f4e4d2;
+  --line: #ecd9c4;
+  --tabs-h: 64px;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Noto Sans KR', system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+  padding-bottom: calc(var(--tabs-h) + env(safe-area-inset-bottom));
+}
+h1, h2, h3 { font-family: 'Noto Serif KR', serif; font-weight: 700; margin: 0; }
+button { font: inherit; color: inherit; cursor: pointer; }
+.sub { color: var(--muted); margin: 4px 0 0; }
+.eyebrow { font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 600; font-size: 22px; color: var(--clay); margin: 0 0 6px; }
+
+/* 잠금 */
+.lock { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; justify-content: center; padding: 32px 24px; max-width: 420px; margin: 0 auto; text-align: center; }
+.lock h1 { font-size: 30px; line-height: 1.3; }
+.lock-form { margin-top: 28px; display: flex; flex-direction: column; gap: 12px; }
+.lock-form input[type=password] { height: 56px; border: 1.5px solid var(--line); border-radius: 14px; padding: 0 16px; font-size: 18px; background: #fff; color: var(--ink); text-align: center; }
+.lock-form input[type=password]:focus { outline: 3px solid color-mix(in srgb, var(--clay) 35%, transparent); border-color: var(--clay); }
+.btn { height: 56px; border: 0; border-radius: 14px; background: var(--clay); color: #fff; font-size: 18px; font-weight: 700; padding: 0 20px; }
+.btn:active { background: var(--clay-dark); }
+.btn:disabled { opacity: 0.7; }
+.check { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--muted); font-size: 16px; min-height: 44px; }
+.check input { width: 22px; height: 22px; accent-color: var(--clay); }
+.error { color: #b3261e; min-height: 1.6em; margin: 0; font-weight: 500; }
+
+/* 책장 */
+.cover { text-align: center; padding: 36px 20px 20px; }
+.cover h1 { font-size: 30px; line-height: 1.3; margin-top: 10px; }
+.badge { display: inline-block; background: var(--clay); color: #fff; font-weight: 700; font-size: 15px; padding: 4px 16px; border-radius: 999px; }
+.quote { display: block; width: 100%; text-align: left; margin-top: 12px; background: var(--soft); border: 0; border-radius: 14px; padding: 12px 16px; }
+.quote-text { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-wrap; }
+.quote-from { display: block; margin-top: 2px; color: var(--muted); font-size: 15px; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; padding: 0 3px; }
+.tile { padding: 0; border: 0; background: var(--soft); aspect-ratio: 1; overflow: hidden; }
+.tile img, .video-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.section { font-size: 22px; padding: 28px 20px 12px; }
+.videos { display: flex; flex-direction: column; gap: 12px; padding: 0 16px; }
+.video-card { position: relative; padding: 0; border: 0; background: var(--soft); border-radius: 14px; overflow: hidden; aspect-ratio: 16 / 9; }
+.play { position: absolute; inset: 0; margin: auto; width: 64px; height: 64px; border-radius: 50%; background: rgba(0, 0, 0, 0.55); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 26px; padding-left: 4px; }
+.messages { display: flex; flex-direction: column; gap: 12px; padding: 0 16px; }
+.msg { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+.msg-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg-from { margin: 8px 0 0; color: var(--clay); font-weight: 700; text-align: right; }
+.empty { text-align: center; color: var(--muted); padding: 48px 20px; }
+
+/* 아래 메뉴 */
+.tabs { position: fixed; left: 0; right: 0; bottom: 0; height: calc(var(--tabs-h) + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); display: flex; background: #fff; border-top: 1px solid var(--line); z-index: 5; }
+.tab { flex: 1; border: 0; background: none; font-size: 17px; color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 6px; }
+.tab.on { color: var(--clay); font-weight: 700; }
+.count { font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 600; font-size: 20px; }
+
+/* 크게 보기 */
+.viewer { position: fixed; inset: 0; z-index: 10; background: #151110; color: #fff; display: flex; flex-direction: column; }
+.viewer-top, .viewer-bottom { display: flex; align-items: center; justify-content: space-between; padding: max(10px, env(safe-area-inset-top)) 14px 10px; }
+.viewer-bottom { padding: 10px 18px max(14px, env(safe-area-inset-bottom)); }
+.icon-btn { width: 48px; height: 48px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.14); color: #fff; font-size: 30px; line-height: 1; }
+.counter { font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 600; font-size: 22px; }
+.date { font-size: 17px; font-weight: 500; }
+.viewer-stage { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; touch-action: pan-y; }
+.viewer-img, .viewer-video { max-width: 100%; max-height: 100%; object-fit: contain; }
+.viewer-status { position: absolute; margin: 0; color: #ddd; text-align: center; }
+.nav { position: absolute; top: 50%; transform: translateY(-50%); width: 48px; height: 64px; border: 0; background: rgba(0, 0, 0, 0.35); color: #fff; font-size: 38px; line-height: 1; }
+.nav:disabled { opacity: 0.2; }
+.nav.prev { left: 0; border-radius: 0 14px 14px 0; }
+.nav.next { right: 0; border-radius: 14px 0 0 14px; }
+.heart { min-height: 48px; padding: 0 20px; border: 1.5px solid rgba(255, 255, 255, 0.5); border-radius: 999px; background: none; color: #fff; font-size: 18px; }
+.heart.on { background: var(--clay); border-color: var(--clay); font-weight: 700; }
+@media (min-width: 700px) { .shelf, .lock { max-width: 560px; margin-left: auto; margin-right: auto; } }
