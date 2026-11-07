@@ -21,6 +21,11 @@ export function formatDate(takenAtMs) {
   return dateFormat.format(takenAtMs);
 }
 
+// 날짜를 모르는 사진(noDate)은 날짜를 보여 주지 않는다.
+export function dateLabel(item) {
+  return item.noDate ? '' : formatDate(item.takenAt);
+}
+
 export function el(tag, props = {}, ...children) {
   const node = document.createElement(tag);
   for (const [key, value] of Object.entries(props)) {
@@ -214,7 +219,7 @@ export function main() {
       const mine = ++seq;
       const item = list[index];
       counter.textContent = `${index + 1} / ${list.length}`;
-      date.textContent = formatDate(item.takenAt);
+      date.textContent = dateLabel(item);
       prev.disabled = index === 0;
       next.disabled = index === list.length - 1;
       paintHeart();
