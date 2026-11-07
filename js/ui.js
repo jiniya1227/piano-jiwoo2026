@@ -121,12 +121,11 @@ export function main() {
   // ---------- 잠금 화면 ----------
   function showLock(errorText = '') {
     const input = el('input', { type: 'password', id: 'pw', autocomplete: 'off', placeholder: '비밀번호', 'aria-label': '비밀번호', enterkeyhint: 'go' });
-    const remember = el('input', { type: 'checkbox', id: 'remember', checked: true });
     const message = el('p', { class: 'error', role: 'alert' }, errorText);
     const button = el('button', { type: 'submit', class: 'btn' }, '앨범 열기');
     const form = el('form', { class: 'lock-form' },
       input, message, button,
-      el('label', { class: 'check', for: 'remember' }, remember, '이 폰에서 기억하기'));
+      el('p', { class: 'check' }, '한 번 열면 이 폰에서는 다음부터 비밀번호 없이 열려요'));
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       if (!input.value) { message.textContent = '비밀번호를 입력해 주세요.'; return; }
@@ -135,7 +134,7 @@ export function main() {
       message.textContent = '';
       try {
         album = await openWithPassword(input.value, fetchBytes);
-        if (remember.checked) store.rememberKey(album.keyB64); else store.forgetKey();
+        store.rememberKey(album.keyB64); // 항상 이 폰에 기억한다(가족 요청: 다음부터 다시 묻지 않기)
         showShelf();
       } catch (e) {
         showLock(e instanceof WrongPasswordError
